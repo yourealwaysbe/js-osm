@@ -28,7 +28,7 @@ var mapdb = new function () {
                 db.deleteObjectStore(db.item(i));
             }
 
-            db.createObjectStore(WAYS_STORE, { keyPath: WAY_ID_F } );        
+            db.createObjectStore(WAYS_STORE, { keyPath: WAY_ID_F } );
 
             onopen();
         };
@@ -41,12 +41,12 @@ var mapdb = new function () {
         request.onerror = onerror;
     };
 
- 
+
     this.loadPbf = function (pbfFile, onend) {
         var mapData = {
             nodes : {},
             ways : [],
-            relations : [] 
+            relations : []
         };
 
         pbfParser.parse({
@@ -55,17 +55,17 @@ var mapdb = new function () {
             node: function(node) {
                 mapData.nodes[node.id] = node;
             },
-            
+
             way: function(way){
                 mapData.ways.push(way);
             },
-            
+
             relation: function(relation){
                 // console.log(JSON.stringify(relation));
             },
 
-            endDocument: function(){ 
-                loadDataToDB(mapData); 
+            endDocument: function(){
+                loadDataToDB(mapData);
                 onend();
             },
 
@@ -74,7 +74,24 @@ var mapdb = new function () {
                 throw msg;
             }
         });
-    }
+    };
+
+    this.forWays = function (latLow, lonLow, latHigh, lonHigh, cb) {
+        var trans = db.transaction(WAYS_STORE, "readonly");
+        var store = trans.objectStore(WAYS_STORE);
+        var keyRange = IDBKeyRange.lowerBound(0);
+        var request = store.openCursor(keyRange);
+
+        request.onerror = onerror;
+
+        request.onsuccess = function(e) {
+            var result = e.target.result;
+            if (!!result == false)
+                return;
+            cb(result.value);
+            result.continue();
+        };
+    };
 
     var loadDataToDB = function (mapData) {
         var trans = db.transaction([WAYS_STORE], "readwrite");
@@ -82,12 +99,12 @@ var mapdb = new function () {
 
         mapData.ways.forEach(function (way) {
             var points = [];
-            
+
             way.nodeRefs.forEach( function (id) {
                 var node = mapData.nodes[id];
                 points.push(new Coord(node.lat, node.lon));
             });
-          
+
             var dbobj = {
                 id : way.id,
                 points : points
