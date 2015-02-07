@@ -21,7 +21,13 @@ function MapRender(canvas, mapdb) {
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         console.log("render begin");
-        mapdb.forWays(0, 0, 0, 0, function (way) {
+
+        var startLat = lat - (canvas.width / 2) * latDegPerPix;
+        var endLat = lat + (canvas.width / 2) * latDegPerPix;
+        var startLon = lon - (canvas.height / 2) * lonDegPerPix;
+        var endLon = lon + (canvas.height / 2) * lonDegPerPix;
+
+        mapdb.forWays(startLat, startLon, endLat, endLon, function (way) {
             if (way.points.length > 0) {
                 context.beginPath();
 

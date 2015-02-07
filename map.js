@@ -1,5 +1,5 @@
 
-function Coord(lat, lon) {
+function Coords(lat, lon) {
     this.lat = lat;
     this.lon = lon;
 }

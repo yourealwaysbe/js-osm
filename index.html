@@ -8,9 +8,10 @@
     <div id="load-pbf-box">
         <input type="file" id="pbf-file-input"/>
         <button id="load-pbf-button">Load PBF File</button>
+        <button id="clear-db-button">Clear Database</button>
     </div>
     
-    <canvas id="map-canvas"></canvas>
+    <canvas width=800 height=500 id="map-canvas"></canvas>
 
     <div id="map-controls">
         <button id="zoom-in">Zoom In</button>
@@ -20,10 +21,13 @@
         <button id="move-west">W</button>
         <button id="move-east">E</button>
     </div>
-<!--
-<iframe id="debuggerId" class="debuggerContainer"
-    src="IDBExplorer/IDBExplorer.html?name=maps" height=800 width=800></iframe>
--->
+
+    <iframe id="debuggerId" class="debuggerContainer"
+            src="IDBExplorer/IDBExplorer.html?name=maps" 
+            height=800 width=800>
+    </iframe>
+    
+
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="osm-read-pbf.js"> </script>
     <script type="text/javascript" src="map.js"> </script>
@@ -45,6 +49,10 @@
                         loadPbfButton.html("Load PBF File");
                         render.render();
                     });
+                });
+
+                $("#clear-db-button").click(function (e) {
+                    mapdb.clear();
                 });
 
                 $("#zoom-in").click(function (e) {
