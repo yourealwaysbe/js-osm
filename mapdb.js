@@ -1,4 +1,5 @@
 
+// requires osm-read-xml.js
 // requires osm-read-pbf.js
 // requires map.js
 
@@ -52,7 +53,6 @@ var mapdb = new function () {
 
         request.onerror = onerror;
     };
-
 
     this.loadPbf = function (pbfFile, onend) {
         var mapData = {
@@ -166,7 +166,6 @@ var mapdb = new function () {
             request.onsuccess = function (e) {
                 var cursor = e.target.result;
                 if (cursor) {
-                    console.log("updating " + JSON.stringify(cursor.value));
                     var tile = cursor.value;
                     tileWays.forEach(function (wayId) {
                         tile.ways.add(wayId);

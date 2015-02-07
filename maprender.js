@@ -6,8 +6,6 @@ function MapRender(canvas, mapdb) {
     var canvas = canvas;
     var mapdb = mapdb;
 
-    console.log("mapdb = " + mapdb);
-
     var lat = 50.7021;
     var lon = -1.2968;
     var latDegPerPix = 0.001;
@@ -19,8 +17,6 @@ function MapRender(canvas, mapdb) {
 
     this.render = function () {
         context.clearRect(0, 0, canvas.width, canvas.height);
-
-        console.log("render begin");
 
         var startLat = lat - (canvas.width / 2) * latDegPerPix;
         var endLat = lat + (canvas.width / 2) * latDegPerPix;
@@ -42,7 +38,6 @@ function MapRender(canvas, mapdb) {
                 context.stroke();
             }
         });
-        console.log("render end");
     };
 
     this.zoom = function (factor) {
