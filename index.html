@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script type="text/javascript" src="osm-read-pbf.js"> </script>
+    <script type="text/javascript" src="map.js"> </script>
+    <script type="text/javascript" src="mapdb.js"> </script>
+    <script>
+        $(document).ready(function () {
+            var loadPbfButton = $("#load-pbf-button");
+
+            mapdb.open(function () {
+                loadPbfButton.click(function (e) {
+                    loadPbfButton.html("Loading...");
+                    var fileName = $("#pbf-file-input").val();
+                    mapdb.loadPbf(fileName, function () {
+                        loadPbfButton.html("Load PBF File");
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    
+    <div id="load-pbf-box">
+        <input type="file" id="pbf-file-input"/>
+        <button id="load-pbf-button">Load PBF File</button>
+    </div>
+
+<!--
+<iframe id="debuggerId" class="debuggerContainer"
+    src="IDBExplorer/IDBExplorer.html?name=maps" height=800 width=800></iframe>
+-->
+</body>
+</html>
