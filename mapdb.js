@@ -15,16 +15,19 @@
 
 var WayType = {
     BUILDING : 'B',
-    HIGHWAY : 'H',
+    HIGHWAY_LOCAL : 'h',
+    HIGHWAY_NATIONAL : 'H',
     LANDUSE : 'L',
-    MISC : 'M'
+    MISC : 'M',
+    RAILWAY_LOCAL : 'r',
+    RAILWAY_NATIONAL : 'R'
 };
 
 var ZoomLevel = {
     FULL : 'F',
+    MEDIUM : 'M',
     OVERVIEW : 'O'
 };
-
 
 var mapdb = new function () {
     var DBNAME = "maps";
@@ -35,15 +38,23 @@ var mapdb = new function () {
     // mult lat/lon by this number then floor
     var TILE_FACTOR = { };
     TILE_FACTOR[ZoomLevel.FULL] = 100;
-    TILE_FACTOR[ZoomLevel.OVERVIEW] = 10;
+    TILE_FACTOR[ZoomLevel.MEDIUM] = 20;
+    TILE_FACTOR[ZoomLevel.OVERVIEW] = 5;
 
     var WAY_TYPES = { };
-    WAY_TYPES[ZoomLevel.FULL] = new Set([WayType.BUILDING,
-                                         WayType.LANDUSE,
-                                         WayType.HIGHWAY,
-                                         WayType.MISC]);
-    WAY_TYPES[ZoomLevel.OVERVIEW] = new Set([WayType.LANDUSE,
-                                             WayType.HIGHWAY]);
+    WAY_TYPES[ZoomLevel.FULL] = new Set([]);
+    $.each(WayType, function (name, type) {
+        WAY_TYPES[ZoomLevel.FULL].add(type);
+    });
+    WAY_TYPES[ZoomLevel.MEDIUM] = new Set([WayType.HIGHWAY_LOCAL,
+                                           WayType.HIGHWAY_NATIONAL,
+                                           WayType.RAILWAY_LOCAL,
+                                           WayType.RAILWAY_NATIONAL]);
+    WAY_TYPES[ZoomLevel.OVERVIEW] = new Set([WayType.HIGHWAY_NATIONAL,
+                                             WayType.RAILWAY_NATIONAL]);
+
+    var HIGHWAY_NATIONAL_TAGS = new Set(["motorway", "trunk", "primary", "secondary"]);
+    var RAILWAY_NATIONAL_TAGS = new Set(["rail"]);
 
     var db = null;
 
@@ -221,12 +232,23 @@ var mapdb = new function () {
     };
 
     var getWayType = function (way) {
-        if (!!way.tags.building)
+        if (!!way.tags.building) {
             return WayType.BUILDING;
-        if (!!way.tags.highway)
-            return WayType.HIGHWAY;
-        if (!!way.tags.landuse)
+        } else if (!!way.tags.highway) {
+            if (HIGHWAY_NATIONAL_TAGS.has(way.tags.highway))
+                return WayType.HIGHWAY_NATIONAL;
+            else
+                return WayType.HIGHWAY_LOCAL;
+
+        } else if (!!way.tags.landuse) {
             return WayType.LANDUSE;
+        } else if (!!way.tags.railway) {
+            if (RAILWAY_NATIONAL_TAGS.has(way.tags.railway))
+                return WayType.RAILWAY_NATIONAL;
+            else
+                return WayType.RAILWAY_LOCAL;
+        }
+
         return WayType.MISC;
     };
 

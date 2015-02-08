@@ -3,7 +3,8 @@
 // requires map
 
 function MapRender(canvas, mapdb) {
-    var OVERVIEW_DEGPERPIX = 0.00002;
+    var MEDIUM_DEGPERPIX = 0.00009;
+    var OVERVIEW_DEGPERPIX = 0.0005;
 
     var canvas = canvas;
     var mapdb = mapdb;
@@ -30,9 +31,7 @@ function MapRender(canvas, mapdb) {
         var startLon = lon - (canvas.height / 2) * degPerPix;
         var endLon = lon + (canvas.height / 2) * degPerPix;
 
-        var zoom = (degPerPix > OVERVIEW_DEGPERPIX) ?
-                   ZoomLevel.OVERVIEW :
-                   ZoomLevel.FULL;
+        var zoom = getZoomLevel();
 
         mapdb.forWays(startLat, startLon, endLat, endLon, zoom, function (way) {
             if (way.points.length > 0) {
@@ -72,8 +71,15 @@ function MapRender(canvas, mapdb) {
     }
 
 
+    var getZoomLevel = function () {
+        if (degPerPix > OVERVIEW_DEGPERPIX)
+            return ZoomLevel.OVERVIEW;
+        if (degPerPix > MEDIUM_DEGPERPIX)
+            return ZoomLevel.MEDIUM;
+        return ZoomLevel.FULL;
+    }
 
-    function canvasCoord(coord) {
+    var canvasCoord = function (coord) {
         var point = { };
 
         offsetLat = coord.lat - lat;
