@@ -6,9 +6,24 @@
 <body>
     
     <div id="load-box">
-        <input type="file" id="file-input"/>
-        <button id="load-button">Load File</button>
-        <button id="clear-db-button">Clear Database</button>
+        <div>
+            <input type="file" id="file-input"/>
+            <button id="load-button">Load File</button>
+            <input type="text" id="url-input"/>
+            <button id="load-url-button">Load URL</button>
+            <button id="clear-db-button">Clear Database</button>
+        </div>
+        <div>
+            <p>
+                PBF Files available from 
+               <a href="http://download.geofabrik.de/">Geofabrik</a>
+               or
+               <a href="http://extract.bbbike.org/">BBBike</a>.
+               Files of less than 10mb seem to work ok, larger may fail.  Works
+               in Firefox.  Doesn't work in Chromium.  Load URL will probably fail
+               because of the single origin policy.
+            </p>
+        </div>
     </div>
     
     <canvas width=800 height=500 id="map-canvas"></canvas>
@@ -39,6 +54,7 @@
         $(document).ready(function () {
             mapdb.open(function () {
                 var $loadButton = $("#load-button");
+                var $loadURLButton = $("#load-url-button");
                 var $canvas = $("#map-canvas");
                 var canvas = $canvas.get(0);
                 var $stats = $("#stats");
@@ -51,18 +67,27 @@
                                 "Dpp: " + render.getDpp());
                 }
 
-                $loadButton.click(function (e) {
-                    $loadButton.html("Loading...");
-                    var fileName = $("#file-input").val();
-                    if (!!fileName) {
-                        mapdb.loadPbf(fileName, function () {
-                            $loadButton.html("Load File");
+                var loadURI = function (uri, button) {
+                    var oldHtml = button.html();
+
+                    button.html("Loading...");
+                    if (!!uri) {
+                        mapdb.loadPbf(uri, function () {
+                            button.html(oldHtml);
                             render.render();
                         });
                     } else {
-                        alert("Require PBF");
-                        $loadButton.html("Load File");
+                        alert("No source specified.");
+                        button.html(loadHtml);
                     }
+                }
+
+                $loadButton.click(function (e) {
+                    loadURI($("#file-input").val(), $loadButton);
+                });
+
+                $loadURLButton.click(function (e) {
+                    loadURI($("#url-input").val(), $loadURLButton);
                 });
 
                 $("#clear-db-button").click(function (e) {
