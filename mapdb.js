@@ -8,9 +8,23 @@
 //      ways:
 //          { id: <string>,
 //            points: [<Coord>] }*
+//            type: WayType
 //      index:
 //          { id: <lat>-<lon>,
 //            ways: Set(<wayId>) }
+
+var WayType = {
+    BUILDING : 'B',
+    HIGHWAY : 'H',
+    LANDUSE : 'L',
+    MISC : 'M'
+};
+
+var ZoomLevel = {
+    FULL : 'F',
+    OVERVIEW : 'O'
+};
+
 
 var mapdb = new function () {
     var DBNAME = "maps";
@@ -19,8 +33,17 @@ var mapdb = new function () {
     var INDEX_STORE = "index";
 
     // mult lat/lon by this number then floor
-    var TILE_FACTOR = 100;
-    var TILE_MIN = 180 * TILE_FACTOR
+    var TILE_FACTOR = { };
+    TILE_FACTOR[ZoomLevel.FULL] = 100;
+    TILE_FACTOR[ZoomLevel.OVERVIEW] = 10;
+
+    var WAY_TYPES = { };
+    WAY_TYPES[ZoomLevel.FULL] = new Set([WayType.BUILDING,
+                                         WayType.LANDUSE,
+                                         WayType.HIGHWAY,
+                                         WayType.MISC]);
+    WAY_TYPES[ZoomLevel.OVERVIEW] = new Set([WayType.LANDUSE,
+                                             WayType.HIGHWAY]);
 
     var db = null;
 
@@ -90,19 +113,19 @@ var mapdb = new function () {
     };
 
     this.clear = function () {
-        var trans = db.transaction(WAYS_STORE, "readwrite");
-        var store = trans.objectStore(WAYS_STORE);
-        store.clear();
-        trans = db.transaction(INDEX_STORE, "readwrite");
-        store = trans.objectStore(INDEX_STORE);
-        store.clear();
+        var transWays = db.transaction(WAYS_STORE, "readwrite");
+        var storeWays = transWays.objectStore(WAYS_STORE);
+        storeWays.clear();
+        var transIdx = db.transaction(INDEX_STORE, "readwrite");
+        var storeIdx = transIdx.objectStore(INDEX_STORE);
+        storeIdx.clear();
     };
 
-    this.forWays = function (latLow, lonLow, latHigh, lonHigh, cb) {
-        var startLat = getTileCoord(latLow);
-        var endLat = getTileCoord(latHigh);
-        var startLon = getTileCoord(lonLow);
-        var endLon = getTileCoord(lonHigh);
+    this.forWays = function (latLow, lonLow, latHigh, lonHigh, zoom, cb) {
+        var startLat = getTileCoord(latLow, zoom);
+        var endLat = getTileCoord(latHigh, zoom);
+        var startLon = getTileCoord(lonLow, zoom);
+        var endLon = getTileCoord(lonHigh, zoom);
 
         function doLat(tileLat) {
             if (tileLat > endLat)
@@ -111,8 +134,8 @@ var mapdb = new function () {
             var trans = db.transaction(INDEX_STORE, "readonly");
             var store = trans.objectStore(INDEX_STORE);
 
-            var lowerId = makeTileCoordId(tileLat, startLon);
-            var upperId = makeTileCoordId(tileLat, endLon);
+            var lowerId = makeTileCoordId(tileLat, startLon, zoom);
+            var upperId = makeTileCoordId(tileLat, endLon, zoom);
             var keyRange = IDBKeyRange.bound(lowerId, upperId);
             var request = store.openCursor(keyRange);
 
@@ -142,23 +165,30 @@ var mapdb = new function () {
 
         mapData.ways.forEach(function (way) {
             var points = [];
+            var wayType = getWayType(way);
 
             way.nodeRefs.forEach(function (id) {
                 var node = mapData.nodes[id];
                 points.push(new Coords(node.lat, node.lon));
 
-                var tileId = getContainingTileId(node.lat, node.lon);
-                var index = newWayIndex[tileId];
-                if (index) {
-                    index.add(way.id);
-                } else {
-                    newWayIndex[tileId] = new Set([way.id]);
-                }
+                $.each(ZoomLevel, function (name, zoom) {
+                    if (!WAY_TYPES[zoom].has(wayType))
+                        return;
+
+                    var tileId = getContainingTileId(node.lat, node.lon, zoom);
+                    var index = newWayIndex[tileId];
+                    if (index) {
+                        index.add(way.id);
+                    } else {
+                        newWayIndex[tileId] = new Set([way.id]);
+                    }
+                });
             });
 
             var dbobj = {
                 id : way.id,
-                points : points
+                points : points,
+                type : wayType
             };
 
             var request = wayStore.put(dbobj);
@@ -190,21 +220,34 @@ var mapdb = new function () {
         });
     };
 
-    var getTileCoord = function (x) {
-        var newX = TILE_MIN + x * TILE_FACTOR;
-        return Math.floor(newX);
-    }
+    var getWayType = function (way) {
+        if (!!way.tags.building)
+            return WayType.BUILDING;
+        if (!!way.tags.highway)
+            return WayType.HIGHWAY;
+        if (!!way.tags.landuse)
+            return WayType.LANDUSE;
+        return WayType.MISC;
+    };
 
-    var makeTileCoordId = function (tileCoordLat, tileCoordLon) {
+    var getTileCoord = function (x, zoom) {
+        var tf = TILE_FACTOR[zoom];
+        var newX = (180 * tf) + x * tf;
+        return Math.floor(newX);
+    };
+
+    var makeTileCoordId = function (tileCoordLat, tileCoordLon, zoom) {
         var lat = ("00000" + Math.abs(tileCoordLat)).slice(-5);
         var lon = ("00000" + Math.abs(tileCoordLon)).slice(-5);
 
-        return lat + "#" + lon;
-    }
+        return zoom + '#' + lat + "#" + lon;
+    };
 
-    var getContainingTileId = function (lat, lon) {
-        return makeTileCoordId(getTileCoord(lat), getTileCoord(lon));
-    }
+    var getContainingTileId = function (lat, lon, zoom) {
+        return makeTileCoordId(getTileCoord(lat, zoom),
+                               getTileCoord(lon, zoom),
+                               zoom);
+    };
 
     var getWay = function (wayId, cb) {
         var trans = db.transaction(WAYS_STORE, "readonly");
@@ -218,5 +261,5 @@ var mapdb = new function () {
             if (!!result)
                 cb(result);
         };
-    }
+    };
 };
