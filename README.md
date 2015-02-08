@@ -2,7 +2,8 @@
 JS-OSM
 ======
 
-Experiments with rendering OSM data in browser on an HTML5 canvas.
+Experiments with rendering OSM data in browser on an HTML5 canvas, using
+indexedDB for storage.
 
 
 Usage
