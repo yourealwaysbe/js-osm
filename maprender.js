@@ -6,13 +6,17 @@ function MapRender(canvas, mapdb) {
     var canvas = canvas;
     var mapdb = mapdb;
 
-    var lat = 50.8177;
-    var lon = -.1373;
-    var degPerPix = 0.0001;
+    var lat = 50.8204;
+    var lon = -.1450;
+    var degPerPix = 0.00003;
 
     var context = canvas.getContext("2d");
     var centerX = canvas.width / 2;
     var centerY = canvas.height / 2;
+
+    this.getLat = function () { return lat; };
+    this.getLon = function () { return lon; };
+    this.getDpp = function () { return degPerPix; }
 
     this.clear = function () {
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -56,6 +60,11 @@ function MapRender(canvas, mapdb) {
         this.clear();
         this.render();
     }
+
+    this.center = function (offPixX, offPixY) {
+        this.move(offPixX - centerX, centerY - offPixY);
+    }
+
 
 
     function canvasCoord(coord) {

@@ -20,7 +20,9 @@
         <button id="move-south">S</button>
         <button id="move-west">W</button>
         <button id="move-east">E</button>
+        <span id="stats">Stats...</span>
     </div>
+        
 <!--
     <iframe id="debuggerId" class="debuggerContainer"
             src="IDBExplorer/IDBExplorer.html?name=maps" 
@@ -34,19 +36,26 @@
     <script type="text/javascript" src="maprender.js"> </script>
     <script>
         $(document).ready(function () {
-            var loadButton = $("#load-button");
-
             mapdb.open(function () {
-                var canvas = $("#map-canvas").get(0);
+                var $loadButton = $("#load-button");
+                var $canvas = $("#map-canvas");
+                var canvas = $canvas.get(0);
+                var $stats = $("#stats");
 
                 var render = new MapRender(canvas, mapdb);
 
-                loadButton.click(function (e) {
-                    loadButton.html("Loading...");
+                var updateStats = function () {
+                    $stats.html("Lat: " + render.getLat().toFixed(4) + ", " +
+                                "Lon: " + render.getLon().toFixed(4) + ", " +
+                                "Dpp: " + render.getDpp());
+                }
+
+                $loadButton.click(function (e) {
+                    $loadButton.html("Loading...");
                     var fileName = $("#file-input").val();
                     if (fileName.endsWith(".pbf")) {
                         mapdb.loadPbf(fileName, function () {
-                            loadButton.html("Load File");
+                            $loadButton.html("Load File");
                             render.render();
                         });
                     } else {
@@ -60,33 +69,45 @@
 
                 $("#zoom-in").click(function (e) {
                     render.zoom(0.5);
+                    updateStats();
                 });
 
                 $("#zoom-out").click(function (e) {
                     render.zoom(2);
+                    updateStats();
                 });
 
                 $("#move-north").click(function (e) {
                     render.move(0, 100);
+                    updateStats();
                 });
 
                 $("#move-south").click(function (e) {
                     render.move(0, -100);
+                    updateStats();
                 });
 
                 $("#move-west").click(function (e) {
                     render.move(-100, 0);
+                    updateStats();
                 });
 
                 $("#move-east").click(function (e) {
                     render.move(100, 0);
+                    updateStats();
+                });
+
+                $canvas.click(function (e) {
+                    var offX = e.pageX - canvas.offsetLeft;
+                    var offY = e.pageY - canvas.offsetTop;
+                    render.center(offX, offY);
+                    updateStats();
                 });
 
                 render.render();
+                updateStats();
             });
         });
     </script>
-
-
 </body>
 </html>
