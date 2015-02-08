@@ -63,11 +63,11 @@ var mapdb = new function () {
     };
 
     this.open = function(onopen) {
-        var version = 4;
+        var version = 5;
         var request = indexedDB.open(DBNAME, version);
 
         request.onupgradeneeded = function(e) {
-            db = e.target.result;
+            var db = e.target.result;
 
             e.target.transaction.onerror = onerror;
 
@@ -75,10 +75,10 @@ var mapdb = new function () {
                 db.deleteObjectStore(db.objectStoreNames.item(i));
             }
 
-            db.createObjectStore(WAYS_STORE, { keyPath: "id" } );
-            db.createObjectStore(INDEX_STORE, { keyPath: "id" } );
-
-            onopen();
+            if (!db.objectStoreNames.contains(WAYS_STORE))
+                db.createObjectStore(WAYS_STORE, { keyPath: "id" } );
+            if (!db.objectStoreNames.contains(INDEX_STORE))
+                db.createObjectStore(INDEX_STORE, { keyPath: "id" } );
         };
 
         request.onsuccess = function(e) {

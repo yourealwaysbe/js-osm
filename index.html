@@ -54,7 +54,7 @@
                 $loadButton.click(function (e) {
                     $loadButton.html("Loading...");
                     var fileName = $("#file-input").val();
-                    if (fileName.endsWith(".pbf")) {
+                    if (!!fileName) {
                         mapdb.loadPbf(fileName, function () {
                             $loadButton.html("Load File");
                             render.render();
