@@ -24,4 +24,4 @@ Screenshot
 
 Here's Brighton (West Sussex)!
 
-![Screen shot of Brighton](screenshot.png)
+![Screen shot of Brighton](screenshot.jpg)
