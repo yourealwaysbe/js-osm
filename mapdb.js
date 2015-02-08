@@ -19,7 +19,7 @@ var mapdb = new function () {
     var INDEX_STORE = "index";
 
     // mult lat/lon by this number then floor
-    var TILE_FACTOR = 5;
+    var TILE_FACTOR = 40;
     var TILE_MIN = 180 * TILE_FACTOR
 
     var db = null;
