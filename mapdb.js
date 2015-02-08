@@ -10,7 +10,7 @@
 //            points: [<Coord>] }*
 //            type: WayType
 //      index:
-//          { id: <lat>-<lon>,
+//          { id: <zoom>-<lat>-<lon>,
 //            ways: Set(<wayId>) }
 
 var WayType = {
@@ -63,17 +63,13 @@ var mapdb = new function () {
     };
 
     this.open = function(onopen) {
-        var version = 5;
+        var version = 6;
         var request = indexedDB.open(DBNAME, version);
 
         request.onupgradeneeded = function(e) {
             var db = e.target.result;
 
             e.target.transaction.onerror = onerror;
-
-            for (var i = 0; i < db.objectStoreNames.length; ++i) {
-                db.deleteObjectStore(db.objectStoreNames.item(i));
-            }
 
             if (!db.objectStoreNames.contains(WAYS_STORE))
                 db.createObjectStore(WAYS_STORE, { keyPath: "id" } );
