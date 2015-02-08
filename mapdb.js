@@ -19,7 +19,7 @@ var mapdb = new function () {
     var INDEX_STORE = "index";
 
     // mult lat/lon by this number then floor
-    var TILE_FACTOR = 40;
+    var TILE_FACTOR = 100;
     var TILE_MIN = 180 * TILE_FACTOR
 
     var db = null;
@@ -196,8 +196,8 @@ var mapdb = new function () {
     }
 
     var makeTileCoordId = function (tileCoordLat, tileCoordLon) {
-        var lat = ("000" + Math.abs(tileCoordLat)).slice(-3);
-        var lon = ("000" + Math.abs(tileCoordLon)).slice(-3);
+        var lat = ("00000" + Math.abs(tileCoordLat)).slice(-5);
+        var lon = ("00000" + Math.abs(tileCoordLon)).slice(-5);
 
         return lat + "#" + lon;
     }
