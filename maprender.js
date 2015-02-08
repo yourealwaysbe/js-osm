@@ -6,22 +6,23 @@ function MapRender(canvas, mapdb) {
     var canvas = canvas;
     var mapdb = mapdb;
 
-    var lat = 50.7021;
-    var lon = -1.2968;
-    var latDegPerPix = 0.001;
-    var lonDegPerPix = latDegPerPix;
+    var lat = 50.8177;
+    var lon = -.1373;
+    var degPerPix = 0.0001;
 
     var context = canvas.getContext("2d");
     var centerX = canvas.width / 2;
     var centerY = canvas.height / 2;
 
-    this.render = function () {
+    this.clear = function () {
         context.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
-        var startLat = lat - (canvas.width / 2) * latDegPerPix;
-        var endLat = lat + (canvas.width / 2) * latDegPerPix;
-        var startLon = lon - (canvas.height / 2) * lonDegPerPix;
-        var endLon = lon + (canvas.height / 2) * lonDegPerPix;
+    this.render = function () {
+        var startLat = lat - (canvas.width / 2) * degPerPix;
+        var endLat = lat + (canvas.width / 2) * degPerPix;
+        var startLon = lon - (canvas.height / 2) * degPerPix;
+        var endLon = lon + (canvas.height / 2) * degPerPix;
 
         mapdb.forWays(startLat, startLon, endLat, endLon, function (way) {
             if (way.points.length > 0) {
@@ -41,13 +42,19 @@ function MapRender(canvas, mapdb) {
     };
 
     this.zoom = function (factor) {
-        latDegPerPix = factor * latDegPerPix;
-        lonDegPerPix = factor * lonDegPerPix;
+        degPerPix = factor * degPerPix;
+        degPerPix = factor * degPerPix;
+        this.clear();
+        this.render();
     }
 
     this.move = function (offPixX, offPixY) {
-        lat = lat + (latDegPerPix * offPixY);
-        lon = lon + (lonDegPerPix * offPixX);
+        lat = lat + (degPerPix * offPixY);
+        lon = lon + (degPerPix * offPixX);
+        // imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
+        // context.putImageData(imagedata, -offPixX, -offPixY);
+        this.clear();
+        this.render();
     }
 
 
@@ -55,10 +62,10 @@ function MapRender(canvas, mapdb) {
         var point = { };
 
         offsetLat = coord.lat - lat;
-        point.y = centerY - (offsetLat / latDegPerPix);
+        point.y = centerY - (offsetLat / degPerPix);
 
         offsetLon = coord.lon - lon;
-        point.x = centerX + (offsetLon / lonDegPerPix);
+        point.x = centerX + (offsetLon / degPerPix);
 
         return point;
     };

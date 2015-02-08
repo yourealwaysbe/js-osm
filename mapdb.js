@@ -20,6 +20,7 @@ var mapdb = new function () {
 
     // mult lat/lon by this number then floor
     var TILE_FACTOR = 5;
+    var TILE_MIN = 180 * TILE_FACTOR
 
     var db = null;
 
@@ -98,31 +99,39 @@ var mapdb = new function () {
     };
 
     this.forWays = function (latLow, lonLow, latHigh, lonHigh, cb) {
-        var trans = db.transaction(WAYS_STORE, "readonly");
-        var store = trans.objectStore(WAYS_STORE);
-
         var startLat = getTileCoord(latLow);
         var endLat = getTileCoord(latHigh);
         var startLon = getTileCoord(lonLow);
         var endLon = getTileCoord(lonHigh);
 
-        for (var tileLat = startLat; tileLat <= endLat; ++tileLat) {
+        function doLat(tileLat) {
+            if (tileLat > endLat)
+                return;
+
+            var trans = db.transaction(INDEX_STORE, "readonly");
+            var store = trans.objectStore(INDEX_STORE);
+
             var lowerId = makeTileCoordId(tileLat, startLon);
             var upperId = makeTileCoordId(tileLat, endLon);
-            var keyRange = IDBKeyRange.lowerBound(lowerId);
-            var keyRange = IDBKeyRange.upperBound(upperId);
+            var keyRange = IDBKeyRange.bound(lowerId, upperId);
             var request = store.openCursor(keyRange);
 
             request.onerror = onerror;
 
             request.onsuccess = function(e) {
                 var result = e.target.result;
-                if (!!result == false)
-                    return;
-                cb(result.value);
-                result.continue();
+                if (!!result) {
+                    result.value.ways.forEach(function (wayId) {
+                        getWay(wayId, cb);
+                    });
+                    result.continue();
+                } else {
+                    doLat(tileLat + 1);
+                }
             };
         }
+
+        doLat(startLat);
     };
 
     var loadDataToDB = function (mapData) {
@@ -182,16 +191,32 @@ var mapdb = new function () {
     };
 
     var getTileCoord = function (x) {
-        var newX = x * TILE_FACTOR;
-        return (newX < 0) ? Math.ceil(newX) : Math.floor(newX);
+        var newX = TILE_MIN + x * TILE_FACTOR;
+        return Math.floor(newX);
     }
 
     var makeTileCoordId = function (tileCoordLat, tileCoordLon) {
-        return tileCoordLat + "#" + tileCoordLon;
+        var lat = ("000" + Math.abs(tileCoordLat)).slice(-3);
+        var lon = ("000" + Math.abs(tileCoordLon)).slice(-3);
+
+        return lat + "#" + lon;
     }
 
     var getContainingTileId = function (lat, lon) {
         return makeTileCoordId(getTileCoord(lat), getTileCoord(lon));
     }
 
+    var getWay = function (wayId, cb) {
+        var trans = db.transaction(WAYS_STORE, "readonly");
+        var store = trans.objectStore(WAYS_STORE);
+        var request = store.get(wayId);
+
+        request.onerror = onerror;
+
+        request.onsuccess = function(e) {
+            var result = e.target.result;
+            if (!!result)
+                cb(result);
+        };
+    }
 };
