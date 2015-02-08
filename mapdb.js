@@ -235,7 +235,6 @@ var mapdb = new function () {
                 return WayType.HIGHWAY_NATIONAL;
             else
                 return WayType.HIGHWAY_LOCAL;
-
         } else if (!!way.tags.landuse) {
             return WayType.LANDUSE;
         } else if (!!way.tags.railway) {
