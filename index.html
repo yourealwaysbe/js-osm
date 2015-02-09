@@ -20,7 +20,9 @@
         <span id="stats">Stats...</span>
     </div>
 
-    <p>Download view will only work when zoomed in enough!</p>
+    <p>Download view will only work when zoomed in enough (out of politeness to
+    <a href="http://overpass-api.de">overpass-api.de</a>).  Download
+    and import of maps can be slow, so please be patient.</p>
     
     <div id="load-box">
         <div>
@@ -58,7 +60,7 @@
     <script type="text/javascript" src="maprender.js"> </script>
     <script>
         var ZOOM_FACTOR = 0.75;
-        var MAX_DOWNLOAD_DEGS = 0.5;
+        var MAX_DOWNLOAD_DEGS = 0.25;
 
         $(document).ready(function () {
             mapdb.open(function () {

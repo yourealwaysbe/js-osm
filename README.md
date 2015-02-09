@@ -20,9 +20,13 @@ PBF parsing is courtesy of [osm-read](https://github.com/marook/osm-read).
 Large PBF files will choke at the moment.
 
 
-Screenshot
-==========
+Screenshots
+===========
 
-Here's Brighton (West Sussex)!
+London
 
-![Screen shot of Brighton](screenshot.png)
+![Screen shot of London](london.jpg)
+
+Brighton 
+
+![Screen shot of Brighton](brighton.jpg)
