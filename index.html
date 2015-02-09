@@ -4,6 +4,23 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+    <h1>Map Viewer</h1>
+
+
+    <canvas width=800 height=500 id="map-canvas"></canvas>
+
+    <div id="map-controls">
+        <button id="load-box-button">Download View</button>
+        <button id="zoom-in">Zoom In</button>
+        <button id="zoom-out">Zoom Out</button>
+        <button id="move-north">N</button>
+        <button id="move-south">S</button>
+        <button id="move-west">W</button>
+        <button id="move-east">E</button>
+        <span id="stats">Stats...</span>
+    </div>
+
+    <p>Download view will only work when zoomed in enough!</p>
     
     <div id="load-box">
         <div>
@@ -26,17 +43,7 @@
         </div>
     </div>
     
-    <canvas width=800 height=500 id="map-canvas"></canvas>
 
-    <div id="map-controls">
-        <button id="zoom-in">Zoom In</button>
-        <button id="zoom-out">Zoom Out</button>
-        <button id="move-north">N</button>
-        <button id="move-south">S</button>
-        <button id="move-west">W</button>
-        <button id="move-east">E</button>
-        <span id="stats">Stats...</span>
-    </div>
 <!--        
     <iframe id="debuggerId" class="debuggerContainer"
             src="IDBExplorer/IDBExplorer.html?name=maps" 
@@ -45,16 +52,19 @@
 -->    
     <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="osm-read-pbf.js"> </script>
+    <script type="text/javascript" src="osm-read-xml.js"> </script>
     <script type="text/javascript" src="map.js"> </script>
     <script type="text/javascript" src="mapdb.js"> </script>
     <script type="text/javascript" src="maprender.js"> </script>
     <script>
         var ZOOM_FACTOR = 0.75;
+        var MAX_DOWNLOAD_DEGS = 0.5;
 
         $(document).ready(function () {
             mapdb.open(function () {
                 var $loadButton = $("#load-button");
                 var $loadURLButton = $("#load-url-button");
+                var $loadBoxButton = $("#load-box-button");
                 var $canvas = $("#map-canvas");
                 var canvas = $canvas.get(0);
                 var $stats = $("#stats");
@@ -62,9 +72,19 @@
                 var render = new MapRender(canvas, mapdb);
 
                 var updateStats = function () {
+                    var bbox = render.getBBox();
                     $stats.html("Lat: " + render.getLat().toFixed(4) + ", " +
                                 "Lon: " + render.getLon().toFixed(4) + ", " +
+                                "BBox: [" + bbox.minLon.toFixed(4) + ","
+                                          + bbox.minLat.toFixed(4) + ","
+                                          + bbox.maxLon.toFixed(4) + ","
+                                          + bbox.maxLat.toFixed(4) + "] " +
                                 "Dpp: " + render.getDpp());
+                }
+
+                var canGetXML = function (bbox) {
+                    return Math.abs(bbox.maxLon - bbox.minLon) <= MAX_DOWNLOAD_DEGS ||
+                           Math.abs(bbox.maxLat - bbox.minLat) <= MAX_DOWNLOAD_DEGS;
                 }
 
                 var loadURI = function (uri, button) {
@@ -72,14 +92,31 @@
 
                     button.html("Loading...");
                     if (!!uri) {
-                        mapdb.loadPbf(uri, function () {
-                            button.html(oldHtml);
-                            render.render();
-                        });
+                        if (uri.endsWith(".pbf")) {
+                            mapdb.loadPbf(uri, function () {
+                                button.html(oldHtml);
+                                render.render();
+                            });
+                        } else if (uri.endsWith(".osm")) {
+                            mapdb.loadXML(uri, function () {
+                                button.html(oldHtml);
+                                render.render();
+                            });
+                        } else {
+                            alert(".pbf or .osm required");
+                            button.html(loadHtml);
+                        }
                     } else {
                         alert("No source specified.");
                         button.html(loadHtml);
                     }
+                };
+
+                var setLoadButtonStatus = function () {
+                    if (canGetXML(render.getBBox()))
+                        $loadBoxButton.removeAttr("disabled");
+                    else
+                        $loadBoxButton.attr("disabled", true);
                 }
 
                 $loadButton.click(function (e) {
@@ -90,6 +127,28 @@
                     loadURI($("#url-input").val(), $loadURLButton);
                 });
 
+                $loadBoxButton.click(function (e) {
+                    var bbox = render.getBBox();
+                    if (!canGetXML(bbox)) {
+                        alert("Restricted to 0.25 degrees square: zoom in!");
+                        return;
+                    }
+
+                    var oldHtml = $loadBoxButton.html();
+                    $loadBoxButton.html("Loading...");
+
+                    var url = "http://overpass-api.de/api/xapi?map?bbox=" +
+                              bbox.minLon.toFixed(4) + "," +
+                              bbox.minLat.toFixed(4) + "," +
+                              bbox.maxLon.toFixed(4) + "," +
+                              bbox.maxLat.toFixed(4);
+
+                    mapdb.loadXML(url, function () {
+                                      $loadBoxButton.html(oldHtml);
+                                      render.render();
+                                  });
+                });
+
                 $("#clear-db-button").click(function (e) {
                     mapdb.clear();
                 });
@@ -97,11 +156,13 @@
                 $("#zoom-in").click(function (e) {
                     render.zoom(ZOOM_FACTOR);
                     updateStats();
+                    setLoadButtonStatus();
                 });
 
                 $("#zoom-out").click(function (e) {
                     render.zoom(1 / ZOOM_FACTOR);
                     updateStats();
+                    setLoadButtonStatus();
                 });
 
                 $("#move-north").click(function (e) {
@@ -133,6 +194,7 @@
 
                 render.render();
                 updateStats();
+                setLoadButtonStatus();
             });
         });
     </script>

@@ -85,38 +85,12 @@ var mapdb = new function () {
         request.onerror = onerror;
     };
 
+    this.loadXML = function (xmlFile, onend) {
+        loadGeneric(xmlFile, xmlParser, onend);
+    };
+
     this.loadPbf = function (pbfFile, onend) {
-        var mapData = {
-            nodes : {},
-            ways : [],
-            relations : []
-        };
-
-        pbfParser.parse({
-            filePath: pbfFile,
-
-            node: function(node) {
-                mapData.nodes[node.id] = node;
-            },
-
-            way: function(way){
-                mapData.ways.push(way);
-            },
-
-            relation: function(relation){
-                // console.log(JSON.stringify(relation));
-            },
-
-            endDocument: function(){
-                loadDataToDB(mapData);
-                onend();
-            },
-
-            error: function(msg){
-                console.error('error: ' + msg);
-                throw msg;
-            }
-        });
+        loadGeneric(pbfFile, pbfParser, onend);
     };
 
     this.clear = function () {
@@ -128,11 +102,11 @@ var mapdb = new function () {
         storeIdx.clear();
     };
 
-    this.forWays = function (latLow, lonLow, latHigh, lonHigh, zoom, cb) {
-        var startLat = getTileCoord(latLow, zoom);
-        var endLat = getTileCoord(latHigh, zoom);
-        var startLon = getTileCoord(lonLow, zoom);
-        var endLon = getTileCoord(lonHigh, zoom);
+    this.forWays = function (bbox, zoom, cb) {
+        var startLat = getTileCoord(bbox.minLat, zoom);
+        var endLat = getTileCoord(bbox.maxLat, zoom);
+        var startLon = getTileCoord(bbox.minLon, zoom);
+        var endLon = getTileCoord(bbox.maxLon, zoom);
 
         function doLat(tileLat) {
             if (tileLat > endLat)
@@ -279,4 +253,40 @@ var mapdb = new function () {
                 cb(result);
         };
     };
+
+    var loadGeneric = function (url, parser, onend) {
+        var mapData = {
+            nodes : {},
+            ways : [],
+            relations : []
+        };
+
+        parser.parse({
+            filePath: url,
+
+            node: function(node) {
+                mapData.nodes[node.id] = node;
+            },
+
+            way: function(way){
+                mapData.ways.push(way);
+            },
+
+            relation: function(relation){
+                // console.log(JSON.stringify(relation));
+            },
+
+            endDocument: function(){
+                loadDataToDB(mapData);
+                onend();
+            },
+
+            error: function(msg){
+                console.error('error: ' + msg);
+                throw msg;
+            }
+        });
+
+
+    }
 };

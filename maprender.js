@@ -23,17 +23,21 @@ function MapRender(canvas, mapdb) {
 
     this.clear = function () {
         context.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    };
+
+    this.getBBox = function () {
+        var minLat = lat - (canvas.height / 2) * degPerPix;
+        var maxLat = lat + (canvas.height / 2) * degPerPix;
+        var minLon = lon - (canvas.width / 2) * degPerPix;
+        var maxLon = lon + (canvas.width / 2) * degPerPix;
+        return new BBox(minLat, minLon, maxLat, maxLon);
+    };
 
     this.render = function () {
-        var startLat = lat - (canvas.width / 2) * degPerPix;
-        var endLat = lat + (canvas.width / 2) * degPerPix;
-        var startLon = lon - (canvas.height / 2) * degPerPix;
-        var endLon = lon + (canvas.height / 2) * degPerPix;
-
+        var bbox = this.getBBox();
         var zoom = getZoomLevel();
 
-        mapdb.forWays(startLat, startLon, endLat, endLon, zoom, function (way) {
+        mapdb.forWays(bbox, zoom, function (way) {
             if (way.points.length > 0) {
                 context.beginPath();
 

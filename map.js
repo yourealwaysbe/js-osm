@@ -4,17 +4,11 @@ function Coords(lat, lon) {
     this.lon = lon;
 }
 
-function Node(id, lat, lon) {
-    this.id = id;
-    this.lat = lat;
-    this.lon = lon;
+function BBox(minLat, minLon, maxLat, maxLon) {
+    this.minLat = minLat;
+    this.minLon = minLon;
+    this.maxLat = maxLat;
+    this.maxLon = maxLon;
 }
 
-function Way(id, coordList) {
-    this.id = id;
-    this.coordList = coordList;
-}
 
-function Relation(id) {
-    this.id = id;
-}
