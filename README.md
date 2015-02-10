@@ -11,8 +11,8 @@ Usage
 
 Direct your browser to index.html.  Either download the currently viewable area
 using the "Download View" button, or download some OSM PBF files -- possibly
-from [here](http://download.geofabrik.de/) -- and load them with the button on
-the bottom.
+from [here](http://download.geofabrik.de/) --, store them in the js-osm
+directory, and load them with the button on the bottom.
 
 
 Notes
