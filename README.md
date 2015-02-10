@@ -9,8 +9,10 @@ indexedDB for storage.
 Usage
 =====
 
-Direct your browser to index.html.  Download some OSM PBF files -- possibly from
-[here](http://download.geofabrik.de/) -- and load them with the button on the top.
+Direct your browser to index.html.  Either download the currently viewable area
+using the "Download View" button, or download some OSM PBF files -- possibly
+from [here](http://download.geofabrik.de/) -- and load them with the button on
+the bottom.
 
 
 Notes
