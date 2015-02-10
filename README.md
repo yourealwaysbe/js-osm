@@ -18,8 +18,9 @@ the bottom.
 Notes
 =====
 
-PBF parsing is courtesy of [osm-read](https://github.com/marook/osm-read).
-Large PBF files will choke at the moment.
+OSM PBF and XML parsing is courtesy of
+[osm-read](https://github.com/marook/osm-read).  Large PBF files will choke at
+the moment.
 
 
 Screenshots
